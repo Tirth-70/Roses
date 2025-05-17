@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Flower Viewer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:ital@0;1&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+        canvas {
+            display: block;
+        }
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            color: #333;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        #controls.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #controls button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        #controls button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        #controls button:active {
+            transform: translateY(0);
+        }
+        #playButton {
+            background: rgba(255, 105, 180, 0.2);
+        }
+        #playButton:hover {
+            background: rgba(255, 105, 180, 0.3);
+        }
+        #playButton.playing {
+            background: rgba(255, 69, 0, 0.2);
+        }
+        #playButton.playing:hover {
+            background: rgba(255, 69, 0, 0.3);
+        }
+        .zoom-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .zoom-controls.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .zoom-controls button {
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            font-size: 20px;
+            line-height: 45px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .zoom-controls button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .zoom-controls button:active {
+            transform: scale(0.95);
+        }
+        .message {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+            z-index: 1000;
+            width: 90%;
+            max-width: 600px;
+        }
+        .message.visible {
+            opacity: 1;
+        }
+        .message-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 48px;
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+            margin: 0;
+            padding: 0 20px;
+            line-height: 1.4;
+        }
+        .message-subtext {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px;
+            text-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
+        }
+        .back-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .back-button.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Responsive styles for different screen sizes */
+        @media screen and (max-width: 768px) {
+            .message {
+                bottom: 20px;
+            }
+            .message-text {
+                font-size: 36px;
+            }
+            .message-subtext {
+                font-size: 18px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .message {
+                bottom: 15px;
+            }
+            .message-text {
+                font-size: 28px;
+            }
+            .message-subtext {
+                font-size: 16px;
+                margin-top: 5px;
+            }
+        }
+
+        @media screen and (max-height: 600px) {
+            .message {
+                bottom: 10px;
+            }
+            .message-text {
+                font-size: 24px;
+            }
+            .message-subtext {
+                font-size: 14px;
+                margin-top: 3px;
+            }
+        }
+
+        /* Adjust message position when in portrait mode on mobile */
+        @media screen and (max-width: 480px) and (orientation: portrait) {
+            .message {
+                bottom: 30px;
+            }
+        }
+
+        /* Adjust message position when in landscape mode on mobile */
+        @media screen and (max-height: 480px) and (orientation: landscape) {
+            .message {
+                bottom: 10px;
+            }
+            .message-text {
+                font-size: 20px;
+            }
+            .message-subtext {
+                font-size: 12px;
+                margin-top: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Loading 3D Model...</div>
+    <div id="controls">
+        <button onclick="toggleWireframe()">Toggle View</button>
+        <button id="playButton" onclick="toggleAnimation()">Play</button>
+    </div>
+    <div class="zoom-controls">
+        <button onclick="zoomIn()">+</button>
+        <button onclick="zoomOut()">-</button>
+    </div>
+    <div class="message">
+        <p class="message-text">Made with love, just for you 💝</p>
+        <p class="message-subtext">A special creation to brighten your day</p>
+    </div>
+    <a href="message4.html" class="back-button">← Back</a>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000); // Black background
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Enhanced Lighting for dark background
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Increased ambient light
+        scene.add(ambientLight);
+
+        // Main directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Increased intensity
+        directionalLight.position.set(5, 5, 5);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+
+        // Additional lights for shine
+        const backLight = new THREE.DirectionalLight(0xffffff, 1.0); // Increased intensity
+        backLight.position.set(-5, 5, -5);
+        scene.add(backLight);
+
+        const topLight = new THREE.DirectionalLight(0xffffff, 0.8); // Increased intensity
+        topLight.position.set(0, 10, 0);
+        scene.add(topLight);
+
+        // Point lights for extra shine
+        const pointLight1 = new THREE.PointLight(0xffffff, 0.7); // Increased intensity
+        pointLight1.position.set(3, 2, 3);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0xffffff, 0.7); // Increased intensity
+        pointLight2.position.set(-3, 2, -3);
+        scene.add(pointLight2);
+
+        // Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.zoomSpeed = 2.0;
+
+        // Camera position
+        camera.position.z = 5;
+
+        let model;
+        let wireframeMode = false;
+        let isAnimating = false;
+        let animationFrame = 0;
+        let totalFrames = 200; // Increased frames for smoother animation
+        let wireSegments = [];
+        let currentWireIndex = 0;
+
+        // Function to extract wire segments from geometry
+        function extractWireSegments(geometry) {
+            const segments = [];
+            const positions = geometry.attributes.position.array;
+            const indices = geometry.index ? geometry.index.array : null;
+
+            if (indices) {
+                // For indexed geometry
+                for (let i = 0; i < indices.length; i += 3) {
+                    const a = indices[i];
+                    const b = indices[i + 1];
+                    const c = indices[i + 2];
+                    
+                    segments.push([
+                        new THREE.Vector3(positions[a * 3], positions[a * 3 + 1], positions[a * 3 + 2]),
+                        new THREE.Vector3(positions[b * 3], positions[b * 3 + 1], positions[b * 3 + 2])
+                    ]);
+                    segments.push([
+                        new THREE.Vector3(positions[b * 3], positions[b * 3 + 1], positions[b * 3 + 2]),
+                        new THREE.Vector3(positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2])
+                    ]);
+                    segments.push([
+                        new THREE.Vector3(positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]),
+                        new THREE.Vector3(positions[a * 3], positions[a * 3 + 1], positions[a * 3 + 2])
+                    ]);
+                }
+            } else {
+                // For non-indexed geometry
+                for (let i = 0; i < positions.length; i += 9) {
+                    segments.push([
+                        new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]),
+                        new THREE.Vector3(positions[i + 3], positions[i + 4], positions[i + 5])
+                    ]);
+                    segments.push([
+                        new THREE.Vector3(positions[i + 3], positions[i + 4], positions[i + 5]),
+                        new THREE.Vector3(positions[i + 6], positions[i + 7], positions[i + 8])
+                    ]);
+                    segments.push([
+                        new THREE.Vector3(positions[i + 6], positions[i + 7], positions[i + 8]),
+                        new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2])
+                    ]);
+                }
+            }
+            return segments;
+        }
+
+        // Function to toggle wireframe mode
+        window.toggleWireframe = function() {
+            wireframeMode = !wireframeMode;
+            if (model) {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        const material = child.material;
+                        if (wireframeMode) {
+                            // Show wireframe version
+                            material.wireframe = true;
+                            material.transparent = true;
+                            material.opacity = 1;
+                            material.wireframeLinewidth = 2;
+                            material.wireframeLinecap = 'round';
+                            material.wireframeLinejoin = 'round';
+                        } else {
+                            // Show original version
+                            material.wireframe = false;
+                            material.transparent = false;
+                            material.opacity = 1;
+                        }
+                    }
+                });
+            }
+        };
+
+        // Zoom functions
+        window.zoomIn = function() {
+            camera.position.z -= 1.5;
+            if (camera.position.z < 1) camera.position.z = 1;
+        };
+
+        window.zoomOut = function() {
+            camera.position.z += 1.5;
+            if (camera.position.z > 10) camera.position.z = 10;
+        };
+
+        // Animation functions
+        window.toggleAnimation = function() {
+            const playButton = document.getElementById('playButton');
+            isAnimating = !isAnimating;
+            playButton.classList.toggle('playing');
+            
+            if (isAnimating) {
+                playButton.textContent = 'Stop';
+                // Start with zoomed in view (closer to cover 80% of screen)
+                camera.position.z = 0.5;
+                controls.update();
+                
+                // Hide the original model
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.visible = false;
+                    }
+                });
+                
+                // Extract wire segments from all meshes
+                wireSegments = [];
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        const segments = extractWireSegments(child.geometry);
+                        // Store color information with segments
+                        segments.forEach(segment => {
+                            wireSegments.push({
+                                points: segment,
+                                color: child.material.color
+                            });
+                        });
+                    }
+                });
+                
+                // Sort segments by height (bottom to top)
+                wireSegments.sort((a, b) => {
+                    const aHeight = (a.points[0].y + a.points[1].y) / 2;
+                    const bHeight = (b.points[0].y + b.points[1].y) / 2;
+                    return aHeight - bHeight;
+                });
+                
+                currentWireIndex = 0;
+            } else {
+                playButton.textContent = 'Play';
+                animationFrame = 0;
+                currentWireIndex = 0;
+                // Reset camera position to show full flower
+                camera.position.z = 3;
+                controls.update();
+                // Clear all lines
+                scene.children = scene.children.filter(child => !(child instanceof THREE.Line));
+                // Show original model
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.visible = true;
+                    }
+                });
+            }
+        };
+
+        // Load the 3D model
+        const loader = new GLTFLoader();
+        loader.load(
+            'flores gratuito/Flowers.glb',
+            function (gltf) {
+                model = gltf.scene;
+                
+                // Process each mesh in the model
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        const material = new THREE.MeshStandardMaterial({
+                            map: child.material.map,
+                            normalMap: child.material.normalMap,
+                            roughnessMap: child.material.roughnessMap,
+                            metalnessMap: child.material.metalnessMap,
+                            wireframe: wireframeMode,
+                            metalness: 0.3,
+                            roughness: 0.4,
+                            envMapIntensity: 1.0
+                        });
+
+                        // Intensified colors
+                        if (child.name.toLowerCase().includes('petal') || child.position.y > 0.5) {
+                            material.color.setHex(0xFF1493); // Deep pink
+                            material.emissive = new THREE.Color(0xFF69B4);
+                            material.emissiveIntensity = 0.2;
+                        } else if (child.name.toLowerCase().includes('stamen') || child.position.y > 0.3) {
+                            material.color.setHex(0xFFD700); // Gold
+                            material.emissive = new THREE.Color(0xFFA500);
+                            material.emissiveIntensity = 0.2;
+                        } else if (child.name.toLowerCase().includes('stem')) {
+                            material.color.setHex(0x228B22); // Forest green
+                            material.emissive = new THREE.Color(0x32CD32);
+                            material.emissiveIntensity = 0.2;
+                        } else if (child.name.toLowerCase().includes('leaf')) {
+                            material.color.setHex(0x8B4513); // Saddle brown
+                            material.emissive = new THREE.Color(0xA0522D);
+                            material.emissiveIntensity = 0.2;
+                        }
+
+                        child.material = material;
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+                
+                // Center the model
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                model.position.sub(center);
+                
+                // Scale the model if needed
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 3 / maxDim;
+                model.scale.multiplyScalar(scale);
+                
+                scene.add(model);
+                document.getElementById('loading').style.display = 'none';
+                
+                // Auto-start animation
+                toggleAnimation();
+            },
+            function (xhr) {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            function (error) {
+                console.error('An error happened:', error);
+                document.getElementById('loading').textContent = 'Error loading model';
+            }
+        );
+
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (isAnimating && model) {
+                if (currentWireIndex < wireSegments.length) {
+                    // Add new wire segments
+                    const segmentsToAdd = Math.ceil(wireSegments.length / totalFrames);
+                    for (let i = 0; i < segmentsToAdd && currentWireIndex < wireSegments.length; i++) {
+                        const segment = wireSegments[currentWireIndex];
+                        const geometry = new THREE.BufferGeometry().setFromPoints(segment.points);
+                        const material = new THREE.LineBasicMaterial({ 
+                            color: segment.color,
+                            linewidth: 2
+                        });
+                        const line = new THREE.Line(geometry, material);
+                        scene.add(line);
+                        currentWireIndex++;
+                    }
+                    
+                    // Gradually zoom out as we draw, maintaining 80% screen coverage
+                    const progress = currentWireIndex / wireSegments.length;
+                    // Smooth zoom from 0.5 to 3
+                    camera.position.z = 0.5 + (2.5 * progress);
+                    controls.update();
+                } else {
+                    // Animation complete
+                    isAnimating = false;
+                    const playButton = document.getElementById('playButton');
+                    playButton.textContent = 'Play';
+                    playButton.classList.remove('playing');
+
+                    // Clear all drawn lines
+                    scene.children = scene.children.filter(child => !(child instanceof THREE.Line));
+                    
+                    // Show original model in wireframe mode
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.visible = true;
+                            child.material.wireframe = true;
+                            child.material.transparent = true;
+                            child.material.opacity = 1;
+                            // Store original material properties
+                            child.userData.originalMaterial = {
+                                wireframe: false,
+                                transparent: false,
+                                opacity: 1
+                            };
+                        }
+                    });
+
+                    // Show controls after animation completes
+                    document.getElementById('controls').classList.add('visible');
+                    document.querySelector('.zoom-controls').classList.add('visible');
+                    document.querySelector('.message').classList.add('visible');
+                    document.querySelector('.back-button').classList.add('visible');
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html> 
