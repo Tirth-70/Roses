@@ -11,6 +11,7 @@ An interactive web application that displays a beautiful 3D flower model with va
 - Responsive design for all devices
 - Beautiful message display
 - Smooth transitions and effects
+- Automated deployment with GitHub Actions
 
 ## Technologies Used
 
