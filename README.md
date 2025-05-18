@@ -22,6 +22,8 @@ An interactive web application that displays a beautiful 3D flower model with va
 
 ## Getting Started
 
+### Local Development
+
 1. Clone the repository:
 ```bash
 git clone [your-repository-url]
@@ -41,6 +43,34 @@ python3 -m http.server 8000
 ```
 http://localhost:8000/message.html
 ```
+
+### Deployment
+
+This project can be easily deployed using any of these free hosting services:
+
+#### GitHub Pages
+1. Push your code to GitHub
+2. Go to repository Settings
+3. Scroll to "GitHub Pages" section
+4. Select "main" branch as source
+5. Your site will be available at: `https://YOUR_USERNAME.github.io/interactive-flower-viewer`
+
+#### Netlify
+1. Sign up at https://app.netlify.com/
+2. Connect your GitHub repository
+3. Deploy settings:
+   - Build command: leave empty
+   - Publish directory: ./
+4. Your site will be available at: `https://your-site-name.netlify.app`
+
+#### Vercel
+1. Sign up at https://vercel.com/
+2. Import your GitHub repository
+3. Deploy settings:
+   - Framework Preset: Other
+   - Build Command: leave empty
+   - Output Directory: ./
+4. Your site will be available at: `https://your-site-name.vercel.app`
 
 ## Project Structure
 
