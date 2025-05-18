@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #1a1a1a, #4a1a4a);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background bubbles */
+        .bubbles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: rise 10s infinite ease-in;
+        }
+
+        .bubble:nth-child(1) { left: 10%; animation-duration: 8s; }
+        .bubble:nth-child(2) { left: 20%; animation-duration: 5s; animation-delay: 1s; }
+        .bubble:nth-child(3) { left: 35%; animation-duration: 7s; animation-delay: 2s; }
+        .bubble:nth-child(4) { left: 50%; animation-duration: 11s; animation-delay: 0s; }
+        .bubble:nth-child(5) { left: 65%; animation-duration: 6s; animation-delay: 1s; }
+        .bubble:nth-child(6) { left: 80%; animation-duration: 9s; animation-delay: 2s; }
+        .bubble:nth-child(7) { left: 90%; animation-duration: 7s; animation-delay: 1s; }
+
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(100px);
+            }
+            100% {
+                bottom: 1080px;
+                transform: translateX(-200px);
+            }
+        }
+
+        .welcome-text {
+            font-size: 72px;
+            color: #ffffff;
+            margin-bottom: 40px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            position: relative;
+            z-index: 1;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+            to {
+                text-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+                            0 0 40px rgba(255, 255, 255, 0.6),
+                            0 0 50px rgba(255, 255, 255, 0.4);
+            }
+        }
+
+        .enter-button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: linear-gradient(45deg, #ff69b4, #ff1493);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4);
+        }
+
+        .enter-button:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.6);
+            background: linear-gradient(45deg, #ff1493, #ff69b4);
+        }
+
+        .enter-button:active {
+            transform: scale(0.95) translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="bubbles">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+    <div class="welcome-text">Hii Bubbles🫧</div>
+    <a href="message.html" class="enter-button">Guess what 😌</a>
+</body>
+</html> 
